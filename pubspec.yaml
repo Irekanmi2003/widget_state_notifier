@@ -1,6 +1,6 @@
 name: widget_state_notifier
 description: "It is used for widget state management"
-version: 0.0.1+1
+version: 1.0.0
 homepage: https://github.com/Irekanmi2003/widget_state_notifier
 
 environment:

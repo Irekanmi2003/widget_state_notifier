@@ -5,3 +5,7 @@
 ## 0.0.1+1
 
 - Edited some changes.
+
+## 1.0.0
+
+- Fixed the type cast return in consumer widget.

@@ -107,7 +107,7 @@ class WidgetStateConsumer<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
+    return StreamBuilder<T?>(
       initialData: widgetStateNotifier.currentValue,
       stream: widgetStateNotifier.stream,
       builder: (context, snapshot) => widgetStateBuilder(context, snapshot.data),
