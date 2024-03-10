@@ -100,4 +100,4 @@ Features and Limitations
 
 
 Contributions and Feedback
-Contributions and feedback are welcome! If you encounter any issues or have suggestions for improvement, please feel free to open an issue or submit a pull request on GitHub [https://github.com/Irekanmi2003/widget_state_notifier].
+Contributions and feedback are welcome! If you encounter any issues or have suggestions for improvement, please feel free to open an issue or submit a pull request on GitHub [<a href="https://github.com/Irekanmi2003/widget_state_notifier" title="WidgetStateNotifier" style="color: blue;">WidgetStateNotifier</a>].

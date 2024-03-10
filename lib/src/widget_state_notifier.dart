@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -71,7 +70,7 @@ class WidgetStateNotifier<T> {
   /// ```dart
   /// counterStateNotifier.removeController();
   /// ```
-  bool removeController({Function()? disposeMethod} ) {
+  bool removeController({Function()? disposeMethod}) {
     if (_notifierAdded && _notifier != null) {
       _notifierAdded = false;
       _notifier?.removeListener(_listenerFunction);
@@ -82,7 +81,6 @@ class WidgetStateNotifier<T> {
     return false;
   }
 }
-
 
 /// A function signature for the builder function used in WidgetStateConsumer.
 typedef WidgetStateBuilder<D> = Widget Function(BuildContext context, D? data);
@@ -103,14 +101,82 @@ class WidgetStateConsumer<T> extends StatelessWidget {
   ///   },
   /// );
   /// ```
-  const WidgetStateConsumer({super.key, required this.widgetStateNotifier, required this.widgetStateBuilder});
+  const WidgetStateConsumer(
+      {super.key,
+      required this.widgetStateNotifier,
+      required this.widgetStateBuilder});
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<T?>(
       initialData: widgetStateNotifier.currentValue,
       stream: widgetStateNotifier.stream,
-      builder: (context, snapshot) => widgetStateBuilder(context, snapshot.data),
+      builder: (context, snapshot) =>
+          widgetStateBuilder(context, snapshot.data),
     );
+  }
+}
+
+typedef WidgetStateListBuilder = Widget Function(BuildContext context);
+
+/// A widget for consuming state changes from multiple [WidgetStateNotifier] instances
+/// and rebuilding its child widget in response to state changes.
+class MultiWidgetStateConsumer extends StatelessWidget {
+  /// The list of [WidgetStateNotifier] instances to consume state changes from.
+  final List<WidgetStateNotifier> widgetStateListNotifiers;
+
+  /// The builder function that returns the child widget to be rebuilt in response to state changes.
+  final WidgetStateListBuilder widgetStateListBuilder;
+
+  /// Constructs a [MultiWidgetStateConsumer] with the given [widgetStateListNotifiers]
+  /// and [widgetStateListBuilder].
+  ///
+  /// Example:
+  /// ```dart
+  /// MultiWidgetStateConsumer(
+  ///   widgetStateListNotifiers: [notifier1, notifier2],
+  ///   widgetStateListBuilder: (context) {
+  ///     // Build your widget tree based on state changes from multiple notifiers
+  ///   },
+  /// );
+  /// ```
+  const MultiWidgetStateConsumer({
+    super.key,
+    required this.widgetStateListNotifiers,
+    required this.widgetStateListBuilder,
+  });
+
+  /// Recursively builds nested [StreamBuilder] widgets for each [WidgetStateNotifier]
+  /// in the [widgetStateListNotifiers] list, allowing for multiple state consumers
+  /// within the same widget tree.
+  Widget _buildNestedWidgets(int index) {
+    if ((index + 1) == widgetStateListNotifiers.length) {
+      WidgetStateNotifier thisWidgetStateNotifier =
+          widgetStateListNotifiers[index];
+      return StreamBuilder(
+          initialData: thisWidgetStateNotifier.currentValue,
+          stream: thisWidgetStateNotifier.stream,
+          builder: (context, snapshot) {
+            return widgetStateListBuilder(context);
+          });
+    } else {
+      WidgetStateNotifier thisWidgetStateNotifier =
+          widgetStateListNotifiers[index];
+      return StreamBuilder(
+          initialData: thisWidgetStateNotifier.currentValue,
+          stream: thisWidgetStateNotifier.stream,
+          builder: (context, snapshot) {
+            return _buildNestedWidgets(index + 1);
+          });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widgetStateListNotifiers.isEmpty) {
+      return widgetStateListBuilder(context);
+    } else {
+      return _buildNestedWidgets(0);
+    }
   }
 }
