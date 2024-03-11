@@ -12,3 +12,6 @@
 
 ## 1.1.1
 - Fixed some changes.
+
+## 1.1.2
+- Fixed some changes.

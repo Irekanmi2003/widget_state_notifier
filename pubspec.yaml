@@ -1,7 +1,7 @@
 name: widget_state_notifier
 description: "It provides a flexible solution for managing the state of Flutter widgets, enabling seamless communication between different parts of the widget tree. It encapsulates the current state value and broadcasts any changes to registered listeners."
-version: 1.1.1
-homepage: https://github.com/Irekanmi2003/widget_state_notifier
+version: 1.1.2
+homepage: https://yourdevaji.com
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
