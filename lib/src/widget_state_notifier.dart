@@ -87,7 +87,10 @@ typedef WidgetStateBuilder<D> = Widget Function(BuildContext context, D? data);
 
 /// A widget for consuming state changes from a [WidgetStateNotifier] and rebuilding its child widget in response to state changes.
 class WidgetStateConsumer<T> extends StatelessWidget {
+  /// [WidgetStateNotifier] instances to consume state changes.
   final WidgetStateNotifier<T> widgetStateNotifier;
+
+  /// The builder function that returns the child widget to be rebuilt in response to state changes.
   final WidgetStateBuilder<T> widgetStateBuilder;
 
   /// Constructs a [WidgetStateConsumer] with the given [widgetStateNotifier] and [widgetStateBuilder].
@@ -117,6 +120,7 @@ class WidgetStateConsumer<T> extends StatelessWidget {
   }
 }
 
+/// A function signature for the builder function used in MultiWidgetStateConsumer.
 typedef WidgetStateListBuilder = Widget Function(BuildContext context);
 
 /// A widget for consuming state changes from multiple [WidgetStateNotifier] instances
@@ -151,6 +155,7 @@ class MultiWidgetStateConsumer extends StatelessWidget {
   /// within the same widget tree.
   Widget _buildNestedWidgets(int index) {
     if ((index + 1) == widgetStateListNotifiers.length) {
+      /// Getting the last [WidgetStateNotifier] since it is valid
       WidgetStateNotifier thisWidgetStateNotifier =
           widgetStateListNotifiers[index];
       return StreamBuilder(
@@ -160,6 +165,7 @@ class MultiWidgetStateConsumer extends StatelessWidget {
             return widgetStateListBuilder(context);
           });
     } else {
+      /// Getting the indexed [WidgetStateNotifier] since it is valid
       WidgetStateNotifier thisWidgetStateNotifier =
           widgetStateListNotifiers[index];
       return StreamBuilder(

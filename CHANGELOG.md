@@ -9,3 +9,6 @@
 
 ## 1.1.0
 - Added a 'MultiConsumerWidget' to manage states from different widget_state_notifiers.
+
+## 1.1.1
+- Fixed some changes.
