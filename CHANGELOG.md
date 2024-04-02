@@ -18,3 +18,9 @@
 
 ## 1.1.3
 - Fixed some changes.
+
+## 2.0.0
+- Fixed 'WidgetStateConsumer' instance changed.
+
+## 3.0.0
+- Fixed 'WidgetStateConsumer' instance changed.

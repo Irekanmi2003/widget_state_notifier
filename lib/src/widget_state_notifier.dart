@@ -86,7 +86,7 @@ class WidgetStateNotifier<T> {
 typedef WidgetStateBuilder<D> = Widget Function(BuildContext context, D? data);
 
 /// A widget for consuming state changes from a [WidgetStateNotifier] and rebuilding its child widget in response to state changes.
-class WidgetStateConsumer<T> extends StatelessWidget {
+class WidgetStateConsumer<T> extends StatefulWidget {
   /// [WidgetStateNotifier] instances to consume state changes.
   final WidgetStateNotifier<T> widgetStateNotifier;
 
@@ -110,13 +110,51 @@ class WidgetStateConsumer<T> extends StatelessWidget {
       required this.widgetStateBuilder});
 
   @override
+  State<WidgetStateConsumer<T>> createState() => _WidgetStateConsumerState<T>();
+}
+
+class _WidgetStateConsumerState<T> extends State<WidgetStateConsumer<T>> {
+  T? stateValue;
+  StreamSubscription? streamSubscription;
+
+  @override
+  void didUpdateWidget(covariant WidgetStateConsumer<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    streamSubscription?.cancel();
+    streamSubscription = null;
+    sendState(widget.widgetStateNotifier.currentValue);
+    manageState();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    sendState(widget.widgetStateNotifier.currentValue);
+    manageState();
+  }
+
+  void sendState(T? value) {
+    setState(() {
+      stateValue = value;
+    });
+  }
+
+  void manageState() {
+    streamSubscription ??= widget.widgetStateNotifier.stream.listen((event) {
+      sendState(event);
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    streamSubscription?.cancel();
+    streamSubscription = null;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<T?>(
-      initialData: widgetStateNotifier.currentValue,
-      stream: widgetStateNotifier.stream,
-      builder: (context, snapshot) =>
-          widgetStateBuilder(context, snapshot.data),
-    );
+    return widget.widgetStateBuilder(context, stateValue);
   }
 }
 
@@ -158,20 +196,18 @@ class MultiWidgetStateConsumer extends StatelessWidget {
       /// Getting the last [WidgetStateNotifier] since it is valid
       WidgetStateNotifier thisWidgetStateNotifier =
           widgetStateListNotifiers[index];
-      return StreamBuilder(
-          initialData: thisWidgetStateNotifier.currentValue,
-          stream: thisWidgetStateNotifier.stream,
-          builder: (context, snapshot) {
+      return WidgetStateConsumer(
+          widgetStateNotifier: thisWidgetStateNotifier,
+          widgetStateBuilder: (context, snapshot) {
             return widgetStateListBuilder(context);
           });
     } else {
       /// Getting the indexed [WidgetStateNotifier] since it is valid
       WidgetStateNotifier thisWidgetStateNotifier =
           widgetStateListNotifiers[index];
-      return StreamBuilder(
-          initialData: thisWidgetStateNotifier.currentValue,
-          stream: thisWidgetStateNotifier.stream,
-          builder: (context, snapshot) {
+      return WidgetStateConsumer(
+          widgetStateNotifier: thisWidgetStateNotifier,
+          widgetStateBuilder: (context, snapshot) {
             return _buildNestedWidgets(index + 1);
           });
     }
