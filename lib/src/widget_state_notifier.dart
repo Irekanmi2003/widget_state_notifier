@@ -35,7 +35,10 @@ enum WidgetStateControl {
   custom,
 
   /// Signals the initial state.
-  initial
+  initial,
+
+  /// Signals the loading state.
+  loading
 }
 
 /// A generic class for managing state and broadcasting changes to listeners.

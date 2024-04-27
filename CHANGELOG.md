@@ -30,3 +30,6 @@
 
 ## 3.1.1
 - Added tests classes.
+
+## 3.1.2
+- Added [loading] control state.
