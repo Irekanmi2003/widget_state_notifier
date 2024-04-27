@@ -57,7 +57,7 @@ class WidgetStateNotifier<T> {
   /// ```dart
   /// WidgetStateNotifier<int> counterStateNotifier = WidgetStateNotifier<int>(currentValue: 0);
   /// ```
-  WidgetStateNotifier({this.currentValue});
+  WidgetStateNotifier({this.currentValue,this.currentStateControl = WidgetStateControl.initial});
 
   /// Private variables to manage listeners and notifier state.
   Function(WidgetStateNotifier<T> stateNotifier)? _listener;

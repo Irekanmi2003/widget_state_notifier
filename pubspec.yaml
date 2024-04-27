@@ -1,6 +1,6 @@
 name: widget_state_notifier
 description: "It provides a flexible solution for managing the state, enabling seamless communication between different parts of the widget tree."
-version: 3.1.2
+version: 3.1.3
 homepage: "https://github.com/Irekanmi2003/widget_state_notifier"
 
 environment:

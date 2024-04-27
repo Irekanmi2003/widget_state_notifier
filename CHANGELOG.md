@@ -33,3 +33,6 @@
 
 ## 3.1.2
 - Added [loading] control state.
+- 
+## 3.1.3
+- Implemented a default init control state.
