@@ -24,3 +24,9 @@
 
 ## 3.0.0
 - Fixed 'WidgetStateConsumer' instance changed.
+
+## 3.1.0
+- Added 'WidgetControlState' to control states.
+
+## 3.1.1
+- Added tests classes.

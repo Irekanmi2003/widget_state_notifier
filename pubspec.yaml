@@ -1,11 +1,11 @@
 name: widget_state_notifier
 description: "It provides a flexible solution for managing the state, enabling seamless communication between different parts of the widget tree."
-version: 3.0.0
+version: 3.1.1
 homepage: "https://github.com/Irekanmi2003/widget_state_notifier"
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
-  flutter: ">=1.17.0"
+  sdk: '>=2.17.0 <4.0.0'
+  flutter: ">=1.6.0"
 
 dependencies:
   flutter:

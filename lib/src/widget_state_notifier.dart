@@ -2,13 +2,51 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 
+/// Enum defining control signals for managing state in [WidgetStateNotifier].
+enum WidgetStateControl {
+  /// Signals to resume state processing.
+  resume,
+
+  /// Signals to start state processing.
+  start,
+
+  /// Signals to end state processing.
+  end,
+
+  /// Signals to stop state processing.
+  stop,
+
+  /// Signals an error in state processing.
+  error,
+
+  /// Signals data availability in state processing.
+  data,
+
+  /// Signals to pause state processing.
+  pause,
+
+  /// Signals a lag in state processing.
+  lag,
+
+  /// Signals state processing is over.
+  over,
+
+  /// Signals a custom state control.
+  custom,
+
+  /// Signals the initial state.
+  initial
+}
+
 /// A generic class for managing state and broadcasting changes to listeners.
 class WidgetStateNotifier<T> {
   /// The current value of the state.
   T? currentValue;
+  WidgetStateControl currentStateControl = WidgetStateControl.initial;
 
-  /// A [StreamController] for broadcasting state changes.
-  StreamController<T?> streamController = StreamController<T?>.broadcast();
+  /// Private [StreamController] for broadcasting state changes.
+  final StreamController<T?> _streamController =
+      StreamController<T?>.broadcast();
 
   /// A constructor for initializing the [WidgetStateNotifier] with an optional initial value.
   ///
@@ -24,9 +62,16 @@ class WidgetStateNotifier<T> {
   Listenable? _notifier;
 
   /// Getter for accessing the state change stream.
-  Stream<T?> get stream => streamController.stream;
+  Stream<T?> get stream => _streamController.stream;
 
-  /// Method for sending a new state and notifying listeners.
+  /// Sends a new state to the [WidgetStateNotifier] and notifies listeners.
+  ///
+  /// This method updates the current state of the notifier to [state] and broadcasts
+  /// the state change to all registered listeners. Any widgets consuming the state
+  /// through the notifier's stream will be rebuilt with the new state.
+  ///
+  /// Parameters:
+  ///   - state: The new state to be sent to listeners.
   ///
   /// Example:
   /// ```dart
@@ -34,7 +79,20 @@ class WidgetStateNotifier<T> {
   /// ```
   void sendNewState(T? state) {
     currentValue = state;
-    streamController.add(state);
+    _streamController.add(state);
+  }
+
+  /// Method for sending a new state with control and notifying listeners.
+  ///
+  /// Example:
+  /// ```dart
+  /// counterStateNotifier.sendNewState(newValue,stateControl);
+  /// ```
+  void sendNewStateWithControl(
+      T? state, WidgetStateControl widgetStateControl) {
+    currentValue = state;
+    currentStateControl = widgetStateControl;
+    _streamController.add(state);
   }
 
   /// Private listener function for internal use.
@@ -85,13 +143,20 @@ class WidgetStateNotifier<T> {
 /// A function signature for the builder function used in WidgetStateConsumer.
 typedef WidgetStateBuilder<D> = Widget Function(BuildContext context, D? data);
 
+/// A function signature for the builder function used in WidgetStateConsumer.
+typedef WidgetControlStateBuilder<D> = Widget Function(
+    BuildContext context, D? data, WidgetStateControl widgetStateControl);
+
 /// A widget for consuming state changes from a [WidgetStateNotifier] and rebuilding its child widget in response to state changes.
 class WidgetStateConsumer<T> extends StatefulWidget {
   /// [WidgetStateNotifier] instances to consume state changes.
   final WidgetStateNotifier<T> widgetStateNotifier;
 
   /// The builder function that returns the child widget to be rebuilt in response to state changes.
-  final WidgetStateBuilder<T> widgetStateBuilder;
+  final WidgetStateBuilder<T>? widgetStateBuilder;
+
+  /// The builder function that returns the child widget with controls to be rebuilt in response to state changes.
+  final WidgetControlStateBuilder<T>? widgetControlStateBuilder;
 
   /// Constructs a [WidgetStateConsumer] with the given [widgetStateNotifier] and [widgetStateBuilder].
   ///
@@ -107,7 +172,12 @@ class WidgetStateConsumer<T> extends StatefulWidget {
   const WidgetStateConsumer(
       {super.key,
       required this.widgetStateNotifier,
-      required this.widgetStateBuilder});
+      this.widgetStateBuilder,
+      this.widgetControlStateBuilder})
+      : assert(widgetControlStateBuilder != null &&
+                widgetStateBuilder == null ||
+            widgetControlStateBuilder == null && widgetStateBuilder != null),
+        assert(widgetControlStateBuilder != null || widgetStateBuilder != null);
 
   @override
   State<WidgetStateConsumer<T>> createState() => _WidgetStateConsumerState<T>();
@@ -115,6 +185,7 @@ class WidgetStateConsumer<T> extends StatefulWidget {
 
 class _WidgetStateConsumerState<T> extends State<WidgetStateConsumer<T>> {
   T? stateValue;
+  WidgetStateControl stateControl = WidgetStateControl.initial;
   StreamSubscription? streamSubscription;
 
   @override
@@ -122,26 +193,30 @@ class _WidgetStateConsumerState<T> extends State<WidgetStateConsumer<T>> {
     super.didUpdateWidget(oldWidget);
     streamSubscription?.cancel();
     streamSubscription = null;
-    sendState(widget.widgetStateNotifier.currentValue);
+    sendState(widget.widgetStateNotifier.currentValue,
+        widget.widgetStateNotifier.currentStateControl);
     manageState();
   }
 
   @override
   void initState() {
     super.initState();
-    sendState(widget.widgetStateNotifier.currentValue);
+    sendState(widget.widgetStateNotifier.currentValue,
+        widget.widgetStateNotifier.currentStateControl);
     manageState();
   }
 
-  void sendState(T? value) {
+  void sendState(T? value, WidgetStateControl widgetStateControl) {
     setState(() {
+      stateControl = widgetStateControl;
       stateValue = value;
     });
   }
 
   void manageState() {
     streamSubscription ??= widget.widgetStateNotifier.stream.listen((event) {
-      sendState(event);
+      final stateControl = widget.widgetStateNotifier.currentStateControl;
+      sendState(event, stateControl);
     });
   }
 
@@ -154,7 +229,12 @@ class _WidgetStateConsumerState<T> extends State<WidgetStateConsumer<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.widgetStateBuilder(context, stateValue);
+    if (widget.widgetStateBuilder != null) {
+      return widget.widgetStateBuilder!(context, stateValue);
+    } else {
+      return widget.widgetControlStateBuilder!(
+          context, stateValue, stateControl);
+    }
   }
 }
 
@@ -196,8 +276,9 @@ class MultiWidgetStateConsumer extends StatelessWidget {
       /// Getting the last [WidgetStateNotifier] since it is valid
       WidgetStateNotifier thisWidgetStateNotifier =
           widgetStateListNotifiers[index];
-      return WidgetStateConsumer(
+      return WidgetStateConsumer<dynamic>(
           widgetStateNotifier: thisWidgetStateNotifier,
+          widgetControlStateBuilder: null,
           widgetStateBuilder: (context, snapshot) {
             return widgetStateListBuilder(context);
           });
@@ -205,7 +286,7 @@ class MultiWidgetStateConsumer extends StatelessWidget {
       /// Getting the indexed [WidgetStateNotifier] since it is valid
       WidgetStateNotifier thisWidgetStateNotifier =
           widgetStateListNotifiers[index];
-      return WidgetStateConsumer(
+      return WidgetStateConsumer<dynamic>(
           widgetStateNotifier: thisWidgetStateNotifier,
           widgetStateBuilder: (context, snapshot) {
             return _buildNestedWidgets(index + 1);
