@@ -57,7 +57,9 @@ class WidgetStateNotifier<T> {
   /// ```dart
   /// WidgetStateNotifier<int> counterStateNotifier = WidgetStateNotifier<int>(currentValue: 0);
   /// ```
-  WidgetStateNotifier({this.currentValue,this.currentStateControl = WidgetStateControl.initial});
+  WidgetStateNotifier(
+      {this.currentValue,
+      this.currentStateControl = WidgetStateControl.initial});
 
   /// Private variables to manage listeners and notifier state.
   Function(WidgetStateNotifier<T> stateNotifier)? _listener;
@@ -89,11 +91,12 @@ class WidgetStateNotifier<T> {
   ///
   /// Example:
   /// ```dart
-  /// counterStateNotifier.sendNewState(newValue,stateControl);
+  /// counterStateNotifier.sendStateWithControl(stateControl,state: newValue);
   /// ```
-  void sendNewStateWithControl(
-      T? state, WidgetStateControl widgetStateControl) {
-    currentValue = state;
+  void sendStateWithControl(WidgetStateControl widgetStateControl, {T? state}) {
+    if (currentValue != state) {
+      currentValue = state;
+    }
     currentStateControl = widgetStateControl;
     _streamController.add(state);
   }
@@ -303,6 +306,72 @@ class MultiWidgetStateConsumer extends StatelessWidget {
       return widgetStateListBuilder(context);
     } else {
       return _buildNestedWidgets(0);
+    }
+  }
+}
+
+/// An InheritedWidget that provides a WidgetStateNotifier down the widget tree.
+class WidgetStateProvider<T> extends InheritedWidget {
+  final WidgetStateNotifier<T> notifier;
+
+  const WidgetStateProvider({
+    super.key,
+    required super.child,
+    required this.notifier,
+  });
+
+  /// Retrieves the WidgetStateNotifier of type [T] from the context.
+  ///
+  /// Returns:
+  ///   The notifier if found, or `null` if not found.
+  static WidgetStateNotifier<T>? of<T>(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<WidgetStateProvider<T>>()
+        ?.notifier;
+  }
+
+  @override
+  bool updateShouldNotify(WidgetStateProvider oldWidget) =>
+      notifier != oldWidget.notifier;
+}
+
+/// A class for managing requests and responses, allowing the sending and listening of requests based on specific states.
+class WidgetStateRequest<R, D> {
+  final Map<R, StreamController<D?>> _requests = {};
+  final StreamController<D?> _generalRequest = StreamController<D?>.broadcast();
+
+  /// Sends a request with an optional data payload.
+  ///
+  /// Parameters:
+  ///   - state: The state for which the request is being sent.
+  ///   - data: Optional data payload to be sent with the request.
+  void sendRequest(R state, {D? data}) {
+    if (_requests.containsKey(state)) {
+      _requests[state]?.add(data);
+    } else {
+      _generalRequest.add(data);
+    }
+  }
+
+  /// Adds a listener for a specific request state.
+  ///
+  /// Parameters:
+  ///   - state: The state for which the listener is being added.
+  ///   - onRequested: The function to be called when the request is made.
+  void addRequestListener(R state, Function(D? data) onRequested) {
+    if (!_requests.containsKey(state)) {
+      _requests[state] = StreamController<D?>.broadcast();
+      _requests[state]?.stream.listen(onRequested);
+    }
+  }
+
+  /// Removes a listener for a specific request state.
+  ///
+  /// Parameters:
+  ///   - state: The state for which the listener is being removed.
+  void removeRequestListener(R state) {
+    if (_requests.containsKey(state)) {
+      _requests.remove(state);
     }
   }
 }

@@ -33,6 +33,12 @@
 
 ## 3.1.2
 - Added [loading] control state.
-- 
+
 ## 3.1.3
 - Implemented a default init control state.
+
+## 3.1.4
+- Changed the control interface to allow optional state update.
+
+## 4.0.0
+- Added 'WidgetStateProvider' and 'WidgetStateRequest'

@@ -27,7 +27,7 @@ void main() {
     );
 
     // Send a new state with control signal error
-    notifier.sendNewStateWithControl(null, WidgetStateControl.error);
+    notifier.sendStateWithControl(WidgetStateControl.error);
 
     // Wait for the widget to rebuild
     await tester.pump();
