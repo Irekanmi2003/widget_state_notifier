@@ -42,3 +42,6 @@
 
 ## 4.0.0
 - Added 'WidgetStateProvider' and 'WidgetStateRequest'
+
+## 5.0.0
+- Added 'WidgetStateDependency' and Custom 'WidgetStateControl'
