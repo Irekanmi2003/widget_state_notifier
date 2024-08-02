@@ -45,3 +45,6 @@
 
 ## 5.0.0
 - Added 'WidgetStateDependency' and Custom 'WidgetStateControl'
+
+## 5.1.0
+- Added Method to call for an update without a state or control

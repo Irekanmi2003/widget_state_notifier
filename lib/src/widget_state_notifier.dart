@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 
@@ -52,7 +51,9 @@ class WidgetStateControl {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is WidgetStateControl && runtimeType == other.runtimeType && value == other.value;
+      other is WidgetStateControl &&
+          runtimeType == other.runtimeType &&
+          value == other.value;
 
   @override
   int get hashCode => value.hashCode;
@@ -68,7 +69,8 @@ class WidgetStateNotifier<T> {
   WidgetStateControl currentStateControl = WidgetStateControl.initial;
 
   /// Private [StreamController] for broadcasting state changes.
-  final StreamController<T?> _streamController = StreamController<T?>.broadcast();
+  final StreamController<T?> _streamController =
+      StreamController<T?>.broadcast();
 
   /// Constructor for initializing the [WidgetStateNotifier] with an optional initial value.
   ///
@@ -76,7 +78,9 @@ class WidgetStateNotifier<T> {
   /// ```dart
   /// WidgetStateNotifier<int> counterStateNotifier = WidgetStateNotifier<int>(currentValue: 0);
   /// ```
-  WidgetStateNotifier({this.currentValue, this.currentStateControl = WidgetStateControl.initial});
+  WidgetStateNotifier(
+      {this.currentValue,
+      this.currentStateControl = WidgetStateControl.initial});
 
   /// Private variables to manage listeners and notifier state.
   Function(WidgetStateNotifier<T> stateNotifier)? _listener;
@@ -98,6 +102,16 @@ class WidgetStateNotifier<T> {
   void sendNewState(T? state) {
     currentValue = state;
     _streamController.add(state);
+  }
+
+  /// Sends an update to the [WidgetStateNotifier] and notifies listeners.
+
+  /// Example:
+  /// ```dart
+  /// counterStateNotifier.sendForUpdate(newValue);
+  /// ```
+  void sendForUpdate() {
+    _streamController.add(currentValue);
   }
 
   /// Method for sending a new state with control and notifying listeners.
@@ -127,7 +141,8 @@ class WidgetStateNotifier<T> {
   /// ```dart
   /// counterStateNotifier.addController(yourChangeNotifier, yourListenerFunction);
   /// ```
-  bool addController<G>(Listenable notifier, Function(WidgetStateNotifier<T> stateNotifier) listener) {
+  bool addController<G>(Listenable notifier,
+      Function(WidgetStateNotifier<T> stateNotifier) listener) {
     if (!_notifierAdded) {
       _notifier = notifier;
       _listener = listener;
@@ -189,11 +204,12 @@ class WidgetStateConsumer<T> extends StatefulWidget {
   /// ```
   const WidgetStateConsumer(
       {super.key,
-        required this.widgetStateNotifier,
-        this.widgetStateBuilder,
-        this.widgetControlStateBuilder})
-      : assert(widgetControlStateBuilder != null && widgetStateBuilder == null ||
-      widgetControlStateBuilder == null && widgetStateBuilder != null),
+      required this.widgetStateNotifier,
+      this.widgetStateBuilder,
+      this.widgetControlStateBuilder})
+      : assert(widgetControlStateBuilder != null &&
+                widgetStateBuilder == null ||
+            widgetControlStateBuilder == null && widgetStateBuilder != null),
         assert(widgetControlStateBuilder != null || widgetStateBuilder != null);
 
   @override
@@ -292,7 +308,7 @@ class MultiWidgetStateConsumer extends StatelessWidget {
     if ((index + 1) == widgetStateListNotifiers.length) {
       /// Getting the last [WidgetStateNotifier] since it is valid
       WidgetStateNotifier thisWidgetStateNotifier =
-      widgetStateListNotifiers[index];
+          widgetStateListNotifiers[index];
       return WidgetStateConsumer<dynamic>(
           widgetStateNotifier: thisWidgetStateNotifier,
           widgetControlStateBuilder: null,
@@ -302,7 +318,7 @@ class MultiWidgetStateConsumer extends StatelessWidget {
     } else {
       /// Getting the indexed [WidgetStateNotifier] since it is valid
       WidgetStateNotifier thisWidgetStateNotifier =
-      widgetStateListNotifiers[index];
+          widgetStateListNotifiers[index];
       return WidgetStateConsumer<dynamic>(
           widgetStateNotifier: thisWidgetStateNotifier,
           widgetStateBuilder: (context, snapshot) {
@@ -391,7 +407,8 @@ class WidgetStateRequest<R, D> {
 class WidgetStateDependency {
   WidgetStateDependency._privateConstructor();
 
-  static final WidgetStateDependency _instance = WidgetStateDependency._privateConstructor();
+  static final WidgetStateDependency _instance =
+      WidgetStateDependency._privateConstructor();
 
   static WidgetStateDependency get instance => _instance;
 
@@ -399,7 +416,7 @@ class WidgetStateDependency {
 
   /// Registers a service with the dependency manager.
   void register<T>(T service) {
-    if(service == null){
+    if (service == null) {
       throw ArgumentError("Service cannot be null");
     }
     _services[T] = service;
@@ -431,7 +448,9 @@ class WidgetDependencyProvider extends InheritedWidget {
   });
 
   static WidgetStateDependency of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<WidgetDependencyProvider>()!.dependency;
+    return context
+        .dependOnInheritedWidgetOfExactType<WidgetDependencyProvider>()!
+        .dependency;
   }
 
   @override
