@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 
 /// Class defining control signals for managing state in [WidgetStateNotifier].
@@ -171,6 +172,23 @@ class WidgetStateNotifier<T> {
     }
     return false;
   }
+
+  /// Disposes the [WidgetStateNotifier] by closing the [StreamController]
+  /// and removing any attached listeners.
+  void dispose() {
+    // Close the stream controller to release the stream.
+    _streamController.close();
+
+    // Remove any listener attached to the notifier, if present.
+    if (_notifier != null && _notifierAdded) {
+      _notifier?.removeListener(_listenerFunction);
+    }
+
+    // Reset the notifier and listener flags.
+    _notifier = null;
+    _notifierAdded = false;
+    _listener = null;
+  }
 }
 
 /// A function signature for the builder function used in [WidgetStateConsumer].
@@ -224,11 +242,12 @@ class _WidgetStateConsumerState<T> extends State<WidgetStateConsumer<T>> {
   @override
   void didUpdateWidget(covariant WidgetStateConsumer<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    streamSubscription?.cancel();
-    streamSubscription = null;
-    sendState(widget.widgetStateNotifier.currentValue,
-        widget.widgetStateNotifier.currentStateControl);
-    manageState();
+    if (oldWidget.widgetStateNotifier != widget.widgetStateNotifier) {
+      _unsubscribe();
+      sendState(widget.widgetStateNotifier.currentValue,
+          widget.widgetStateNotifier.currentStateControl);
+      _subscribe();
+    }
   }
 
   @override
@@ -236,7 +255,7 @@ class _WidgetStateConsumerState<T> extends State<WidgetStateConsumer<T>> {
     super.initState();
     sendState(widget.widgetStateNotifier.currentValue,
         widget.widgetStateNotifier.currentStateControl);
-    manageState();
+    _subscribe();
   }
 
   void sendState(T? value, WidgetStateControl widgetStateControl) {
@@ -246,18 +265,22 @@ class _WidgetStateConsumerState<T> extends State<WidgetStateConsumer<T>> {
     });
   }
 
-  void manageState() {
+  void _subscribe() {
     streamSubscription ??= widget.widgetStateNotifier.stream.listen((event) {
       final stateControl = widget.widgetStateNotifier.currentStateControl;
       sendState(event, stateControl);
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  void _unsubscribe() {
     streamSubscription?.cancel();
     streamSubscription = null;
+  }
+
+  @override
+  void dispose() {
+    _unsubscribe();
+    super.dispose();
   }
 
   @override
@@ -415,20 +438,60 @@ class WidgetStateDependency {
   final Map<Type, dynamic> _services = {};
 
   /// Registers a service with the dependency manager.
-  void register<T>(T service) {
+  T register<T>(T service) {
     if (service == null) {
       throw ArgumentError("Service cannot be null");
     }
     _services[T] = service;
+    return service;
   }
 
-  /// Retrieves a registered service.
-  T get<T>() {
-    final service = _services[T];
+  /// Retrieves a registered service, lazily initializing if necessary.
+  T get<T>({T Function()? create}) {
+    if (!_services.containsKey(T)) {
+      if (create != null) {
+        _services[T] = create();
+      } else {
+        throw StateError("Service of type $T is not registered");
+      }
+    }
+    return _services[T] as T;
+  }
+
+  /// Replaces an existing service, or throws an error if the service is not registered.
+  T replace<T>(T service) {
+    if (!_services.containsKey(T)) {
+      throw StateError("Service of type $T is not registered, cannot replace");
+    }
+    _services[T] = service;
+    return service;
+  }
+
+  /// Creates or replaces a service in the dependency manager.
+  T createOrReplace<T>(T service) {
     if (service == null) {
+      throw ArgumentError("Service cannot be null");
+    }
+    if (_services.containsKey(T)) {
+      _services[T] = service;
+    } else {
+      _services[T] = service;
+    }
+    return service;
+  }
+
+  /// Unregisters a service by type.
+  void unregister<T>() {
+    if (_services.containsKey(T)) {
+      _services.remove(T);
+    } else {
       throw StateError("Service of type $T is not registered");
     }
-    return service as T;
+  }
+
+  /// Checks if a service is registered.
+  bool isRegistered<T>() {
+    return _services.containsKey(T);
   }
 
   /// Clears all registered services.

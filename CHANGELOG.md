@@ -48,3 +48,9 @@
 
 ## 5.1.0
 - Added Method to call for an update without a state or control
+
+## 5.1.1
+- Added Method to 'Register','Create or Replace', 'Unregister' and 'Dispose'
+
+## 5.1.2
+- Fixed minor compile error
