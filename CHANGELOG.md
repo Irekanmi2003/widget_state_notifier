@@ -57,3 +57,6 @@
 
 ## 5.2.0
 - Added 'RestrictedWidgetStateNotifier' for exposing read-only and 'SendUpdatedWidgetStateControl'
+
+## 5.2.1
+- Updated 'RestrictedWidgetStateNotifier' 

@@ -218,39 +218,83 @@ class RestrictedWidgetStateException implements Exception {
   }
 }
 
-/// An extended class of [WidgetStateNotifier] for restricting modification of
-/// state and only exposing read-only state.
-/// Blocked methods:
-/// 1. sendNewState()
-/// 2. sendForUpdate()
-/// 3. sendStateWithControl(WidgetStateControl widgetStateControl, {T? state})
-///
-/// Unblocked exception methods:
-/// 1. sendUpdatedControl(WidgetStateControl widgetStateControl)
-class RestrictedWidgetStateNotifier<T> extends WidgetStateNotifier<T> {
-  RestrictedWidgetStateNotifier({
-    super.currentValue,
-    super.currentStateControl,
-  });
+/// Extension on [WidgetStateNotifier] for restricting modification of state.
+extension RestrictedWidgetStateExtention on WidgetStateNotifier {
+  /// An extension of [WidgetStateNotifier] for restricting modification of
+  /// state and only exposing read-only state.
+  /// Blocked methods:
+  /// 1. sendNewState()
+  /// 2. sendForUpdate()
+  /// 3. sendStateWithControl(WidgetStateControl widgetStateControl, {T? state})
+  ///
+  /// Unblocked exception methods:
+  /// 1. sendUpdatedControl(WidgetStateControl widgetStateControl)
+  WidgetStateNotifier restrictedWidgetStateNotifier() {
+    return _RestrictedWidgetStateNotifier(this);
+  }
+}
+
+/// A restricted version of [WidgetStateNotifier] that blocks certain methods.
+class _RestrictedWidgetStateNotifier<T> extends WidgetStateNotifier<T> {
+  final WidgetStateNotifier<T> widgetStateNotifier;
+
+  _RestrictedWidgetStateNotifier(this.widgetStateNotifier);
 
   /// Blocks sending a new state to the [WidgetStateNotifier] and listeners.
   @override
-  void sendNewState(T? state) {
-    throw RestrictedWidgetStateException("sendNewState");
-  }
+  void sendNewState(T? state) =>
+      throw RestrictedWidgetStateException("sendNewState");
 
   /// Blocks sending an update to the [WidgetStateNotifier] and listeners.
   @override
-  void sendForUpdate() {
-    throw RestrictedWidgetStateException("sendForUpdate");
-  }
+  void sendForUpdate() => throw RestrictedWidgetStateException("sendForUpdate");
 
   /// Blocks sending a new state and controls to the [WidgetStateNotifier] and listeners.
   @override
-  void sendStateWithControl(WidgetStateControl widgetStateControl, {T? state}) {
-    throw RestrictedWidgetStateException(
-        "sendStateWithControl($widgetStateControl,${(state != null) ? "state: $state" : ""})");
-  }
+  void sendStateWithControl(WidgetStateControl widgetStateControl,
+          {T? state}) =>
+      throw RestrictedWidgetStateException(
+          "sendStateWithControl($widgetStateControl,${(state != null) ? "state: $state" : ""})");
+
+  @override
+  Function(WidgetStateNotifier<T> stateNotifier)? get _listener =>
+      widgetStateNotifier._listener;
+
+  @override
+  Listenable? get _notifier => widgetStateNotifier._notifier;
+
+  @override
+  bool get _notifierAdded => widgetStateNotifier._notifierAdded;
+
+  @override
+  WidgetStateControl get currentStateControl =>
+      widgetStateNotifier.currentStateControl;
+
+  @override
+  T? get currentValue => widgetStateNotifier.currentValue;
+
+  @override
+  void _listenerFunction() => widgetStateNotifier._listenerFunction();
+
+  @override
+  StreamController<T?> get _streamController =>
+      widgetStateNotifier._streamController;
+
+  @override
+  bool addController<G>(Listenable notifier,
+          Function(WidgetStateNotifier<T> stateNotifier) listener) =>
+      widgetStateNotifier.addController(notifier, listener);
+
+  @override
+  void dispose() => widgetStateNotifier.dispose();
+
+  @override
+  bool removeController({Function()? disposeMethod}) =>
+      widgetStateNotifier.removeController(disposeMethod: disposeMethod);
+
+  @override
+  void sendUpdatedControl(WidgetStateControl widgetStateControl) =>
+      widgetStateNotifier.sendUpdatedControl(widgetStateControl);
 }
 
 /// A function signature for the builder function used in [WidgetStateConsumer].
