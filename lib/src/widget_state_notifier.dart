@@ -101,8 +101,10 @@ class WidgetStateNotifier<T> {
   /// counterStateNotifier.sendNewState(newValue);
   /// ```
   void sendNewState(T? state) {
-    currentValue = state;
-    _streamController.add(state);
+    if (state != currentValue) {
+      currentValue = state;
+      _streamController.add(state);
+    }
   }
 
   /// Sends an update to the [WidgetStateNotifier] and notifies listeners.
@@ -127,6 +129,17 @@ class WidgetStateNotifier<T> {
     }
     currentStateControl = widgetStateControl;
     _streamController.add(state);
+  }
+
+  /// Method for sending an updated control and notifying listeners.
+  ///
+  /// Example:
+  /// ```dart
+  /// counterStateNotifier.sendUpdatedControl(stateControl);
+  /// ```
+  void sendUpdatedControl(WidgetStateControl widgetStateControl) {
+    currentStateControl = widgetStateControl;
+    _streamController.add(currentValue);
   }
 
   /// Private listener function for internal use.
@@ -188,6 +201,55 @@ class WidgetStateNotifier<T> {
     _notifier = null;
     _notifierAdded = false;
     _listener = null;
+  }
+}
+
+/// Exception to indicate restricted usage of state modification.
+class RestrictedWidgetStateException implements Exception {
+  /// The method called.
+  final String method;
+
+  /// Constructor for method value.
+  RestrictedWidgetStateException(this.method);
+
+  @override
+  String toString() {
+    return 'RestrictedWidgetStateException: $method call() is not available in the restricted class.';
+  }
+}
+
+/// An extended class of [WidgetStateNotifier] for restricting modification of
+/// state and only exposing read-only state.
+/// Blocked methods:
+/// 1. sendNewState()
+/// 2. sendForUpdate()
+/// 3. sendStateWithControl(WidgetStateControl widgetStateControl, {T? state})
+///
+/// Unblocked exception methods:
+/// 1. sendUpdatedControl(WidgetStateControl widgetStateControl)
+class RestrictedWidgetStateNotifier<T> extends WidgetStateNotifier<T> {
+  RestrictedWidgetStateNotifier({
+    super.currentValue,
+    super.currentStateControl,
+  });
+
+  /// Blocks sending a new state to the [WidgetStateNotifier] and listeners.
+  @override
+  void sendNewState(T? state) {
+    throw RestrictedWidgetStateException("sendNewState");
+  }
+
+  /// Blocks sending an update to the [WidgetStateNotifier] and listeners.
+  @override
+  void sendForUpdate() {
+    throw RestrictedWidgetStateException("sendForUpdate");
+  }
+
+  /// Blocks sending a new state and controls to the [WidgetStateNotifier] and listeners.
+  @override
+  void sendStateWithControl(WidgetStateControl widgetStateControl, {T? state}) {
+    throw RestrictedWidgetStateException(
+        "sendStateWithControl($widgetStateControl,${(state != null) ? "state: $state" : ""})");
   }
 }
 

@@ -54,3 +54,6 @@
 
 ## 5.1.2
 - Fixed minor compile error
+
+## 5.2.0
+- Added 'RestrictedWidgetStateNotifier' for exposing read-only and 'SendUpdatedWidgetStateControl'

@@ -1,6 +1,6 @@
 name: widget_state_notifier
 description: "It provides a flexible solution for managing the state, enabling seamless communication between different parts of the widget tree."
-version: 5.1.2
+version: 5.2.0
 homepage: "https://github.com/Irekanmi2003/widget_state_notifier"
 
 environment:
@@ -14,7 +14,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
