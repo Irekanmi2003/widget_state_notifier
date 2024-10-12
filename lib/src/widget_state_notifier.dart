@@ -101,10 +101,8 @@ class WidgetStateNotifier<T> {
   /// counterStateNotifier.sendNewState(newValue);
   /// ```
   void sendNewState(T? state) {
-    if (state != currentValue) {
-      currentValue = state;
-      _streamController.add(state);
-    }
+    currentValue = state;
+    _streamController.add(state);
   }
 
   /// Sends an update to the [WidgetStateNotifier] and notifies listeners.
@@ -219,7 +217,7 @@ class RestrictedWidgetStateException implements Exception {
 }
 
 /// Extension on [WidgetStateNotifier] for restricting modification of state.
-extension RestrictedWidgetStateExtention on WidgetStateNotifier {
+extension RestrictedWidgetStateExtention<T> on WidgetStateNotifier<T> {
   /// An extension of [WidgetStateNotifier] for restricting modification of
   /// state and only exposing read-only state.
   /// Blocked methods:
@@ -229,8 +227,8 @@ extension RestrictedWidgetStateExtention on WidgetStateNotifier {
   ///
   /// Unblocked exception methods:
   /// 1. sendUpdatedControl(WidgetStateControl widgetStateControl)
-  WidgetStateNotifier restrictedWidgetStateNotifier() {
-    return _RestrictedWidgetStateNotifier(this);
+  WidgetStateNotifier<T> restrictedWidgetStateNotifier() {
+    return _RestrictedWidgetStateNotifier<T>(this);
   }
 }
 

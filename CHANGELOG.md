@@ -60,3 +60,9 @@
 
 ## 5.2.1
 - Updated 'RestrictedWidgetStateNotifier' 
+
+## 5.2.2
+- Patch update  
+
+## 5.2.3
+- Patch update  
