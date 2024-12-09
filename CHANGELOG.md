@@ -66,3 +66,9 @@
 
 ## 5.2.3
 - Patch update  
+
+## 5.3.3
+- Added 'sendChangedState'  
+
+## 5.4.0
+- Added 'free' and 'canSendState'  

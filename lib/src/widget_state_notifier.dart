@@ -86,7 +86,11 @@ class WidgetStateNotifier<T> {
   /// Private variables to manage listeners and notifier state.
   Function(WidgetStateNotifier<T> stateNotifier)? _listener;
   bool _notifierAdded = false;
+  bool _canSendState = true;
   Listenable? _notifier;
+
+  ///Getter to check if not close
+  bool get canSendState => _canSendState;
 
   /// Getter for accessing the state change stream.
   Stream<T?> get stream => _streamController.stream;
@@ -103,6 +107,22 @@ class WidgetStateNotifier<T> {
   void sendNewState(T? state) {
     currentValue = state;
     _streamController.add(state);
+  }
+
+  /// Sends a changed state to the [WidgetStateNotifier] and notifies listeners.
+  ///
+  /// Parameters:
+  ///   - state: The state different to already state  sent to listeners.
+  ///
+  /// Example:
+  /// ```dart
+  /// counterStateNotifier.sendChangedState(newValue);
+  /// ```
+  void sendChangedState(T? state) {
+    if (state != currentValue) {
+      currentValue = state;
+      _streamController.add(state);
+    }
   }
 
   /// Sends an update to the [WidgetStateNotifier] and notifies listeners.
@@ -190,15 +210,41 @@ class WidgetStateNotifier<T> {
     // Close the stream controller to release the stream.
     _streamController.close();
 
+    // Flag Closed State
+    _canSendState = false;
+
     // Remove any listener attached to the notifier, if present.
     if (_notifier != null && _notifierAdded) {
       _notifier?.removeListener(_listenerFunction);
     }
 
     // Reset the notifier and listener flags.
+    currentValue = null;
+    currentStateControl = WidgetStateControl.initial;
     _notifier = null;
     _notifierAdded = false;
     _listener = null;
+  }
+
+  /// Free the [WidgetStateNotifier] by allow the [StreamController] to broadcast but
+  /// free of state
+  /// and removing any attached listeners if including(by default).
+  void free(
+      {WidgetStateControl widgetStateControl = WidgetStateControl.initial,
+      bool includeListeners = true}) {
+    // Remove any listener attached to the notifier, if present and allowed.
+    if (includeListeners) {
+      if (_notifier != null && _notifierAdded) {
+        _notifier?.removeListener(_listenerFunction);
+      }
+
+      // Reset the notifier and listener flags.
+      currentValue = null;
+      currentStateControl = widgetStateControl;
+      _notifier = null;
+      _notifierAdded = false;
+      _listener = null;
+    }
   }
 }
 
